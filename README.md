@@ -1,4 +1,4 @@
-![banner](https://media.licdn.com/dms/image/D4D22AQFOKwPVpzVu9g/feedshare-shrink_2048_1536/0/1720076213843?e=1723075200&v=beta&t=560QJ4yHRYzBq4-LNB2eNUnfZ49S0nHulZVS2LyniUE)
+![banner](https://raw.githubusercontent.com/2105789/Lango/main/banner.jpg)
 # Lango Programming Language
 
 Lango is a simple interpreted programming language implemented in Go. It supports basic arithmetic operations, variable declarations, control flow statements, and more.
