@@ -18,6 +18,17 @@ type Visitor interface {
 	VisitIfStmt(*If) (interface{}, error)
 	VisitWhileStmt(*While) (interface{}, error)
 	VisitForStmt(*For) (interface{}, error)
+	VisitLogicalExpr(*Logical) (interface{}, error)
+	VisitFunctionStmt(*Function) (interface{}, error)
+	VisitReturnStmt(*Return) (interface{}, error)
+	VisitCallExpr(*Call) (interface{}, error)
+	VisitClassStmt(*Class) (interface{}, error)
+	VisitGetExpr(*Get) (interface{}, error)
+	VisitSetExpr(*Set) (interface{}, error)
+	VisitThisExpr(*This) (interface{}, error)
+	VisitArrayLiteralExpr(*ArrayLiteral) (interface{}, error)
+	VisitArrayIndexExpr(*ArrayIndex) (interface{}, error)
+	VisitArrayAssignExpr(*ArrayAssign) (interface{}, error)
 }
 
 type Expression struct {
@@ -81,4 +92,35 @@ type For struct {
 
 func (f *For) Accept(visitor Visitor) (interface{}, error) {
 	return visitor.VisitForStmt(f)
+}
+
+// Function Statement
+type Function struct {
+	Name   Token    // Function name
+	Params []Token // Parameter names (identifiers)
+	Body   []Stmt   // Function body (list of statements)
+}
+
+func (f *Function) Accept(visitor Visitor) (interface{}, error) {
+	return visitor.VisitFunctionStmt(f)
+}
+
+// Return Statement
+type Return struct {
+	Keyword Token // The 'return' token (for location/error reporting)
+	Value   Expr  // The value being returned (can be nil)
+}
+
+func (r *Return) Accept(visitor Visitor) (interface{}, error) {
+	return visitor.VisitReturnStmt(r)
+}
+
+// Class Statement
+type Class struct {
+	Name    Token      // Class name
+	Methods []*Function // Class methods (parsed like function statements)
+}
+
+func (c *Class) Accept(visitor Visitor) (interface{}, error) {
+	return visitor.VisitClassStmt(c)
 }

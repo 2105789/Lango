@@ -5,11 +5,11 @@ import (
 )
 
 type Parser struct {
-	tokens  []*Token
+	tokens  []Token
 	current int
 }
 
-func NewParser(tokens []*Token) *Parser {
+func NewParser(tokens []Token) *Parser {
 	return &Parser{tokens, 0}
 }
 
@@ -29,11 +29,17 @@ func (p *Parser) declaration() (Stmt, error) {
 	if p.match(VAR) {
 		return p.varDeclaration()
 	}
+	if p.match(FUN) {
+		return p.function("function")
+	}
+	if p.match(CLASS) {
+		return p.classDeclaration()
+	}
 	return p.statement()
 }
 
 func (p *Parser) varDeclaration() (Stmt, error) {
-	name, err := p.consume(IDENTIFIER, "Expect variable name.")
+	nameToken, err := p.consume(IDENTIFIER, "Expect variable name.")
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +54,7 @@ func (p *Parser) varDeclaration() (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Var{Name: name, Initializer: initializer}, nil
+	return &Var{Name: &nameToken, Initializer: initializer}, nil
 }
 
 func (p *Parser) statement() (Stmt, error) {
@@ -62,6 +68,8 @@ func (p *Parser) statement() (Stmt, error) {
 		return p.forStatement()
 	} else if p.match(LEFT_BRACE) {
 		return p.blockStatement()
+	} else if p.match(RETURN) {
+		return p.returnStatement()
 	}
 	return p.expressionStatement()
 }
@@ -195,23 +203,63 @@ func (p *Parser) expression() (Expr, error) {
 }
 
 func (p *Parser) assignment() (Expr, error) {
-	expr, err := p.equality()
+	expr, err := p.logic_or()
 	if err != nil {
 		return nil, err
 	}
 
 	if p.match(EQUAL) {
 		equals := p.previous()
-		value, err := p.equality()
+		value, err := p.assignment()
 		if err != nil {
 			return nil, err
 		}
 
 		if varExpr, ok := expr.(*Variable); ok {
 			return &Assign{Name: varExpr.Name, Value: value}, nil
+		} else if getExpr, ok := expr.(*Get); ok {
+			return &Set{Object: getExpr.Object, Name: getExpr.Name, Value: value}, nil
+		} else if indexExpr, ok := expr.(*ArrayIndex); ok {
+			return &ArrayAssign{Assignee: *indexExpr, Value: value}, nil
 		}
 
 		return nil, p.error(equals, "Invalid assignment target.")
+	}
+
+	return expr, nil
+}
+
+func (p *Parser) logic_or() (Expr, error) {
+	expr, err := p.logic_and()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(OR) {
+		operator := p.previous()
+		right, err := p.logic_and()
+		if err != nil {
+			return nil, err
+		}
+		expr = &Logical{Left: expr, Operator: operator, Right: right}
+	}
+
+	return expr, nil
+}
+
+func (p *Parser) logic_and() (Expr, error) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(AND) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+		expr = &Logical{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -228,7 +276,7 @@ func (p *Parser) equality() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &Binary{expr, operator, right}
+		expr = &Binary{expr, &operator, right}
 	}
 	return expr, nil
 }
@@ -244,7 +292,7 @@ func (p *Parser) comparison() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &Binary{expr, operator, right}
+		expr = &Binary{expr, &operator, right}
 	}
 	return expr, nil
 }
@@ -260,7 +308,7 @@ func (p *Parser) term() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &Binary{expr, operator, right}
+		expr = &Binary{expr, &operator, right}
 	}
 	return expr, nil
 }
@@ -276,7 +324,7 @@ func (p *Parser) factor() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = &Binary{expr, operator, right}
+		expr = &Binary{expr, &operator, right}
 	}
 	return expr, nil
 }
@@ -288,22 +336,78 @@ func (p *Parser) unary() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Unary{operator, right}, nil
+		return &Unary{&operator, right}, nil
 	}
-	return p.primary()
+	return p.call()
 }
 
-func (p *Parser) bitwiseAnd() (Expr, error) {
-	expr, err := p.equality()
+func (p *Parser) call() (Expr, error) {
+	expr, err := p.primary()
 	if err != nil {
 		return nil, err
 	}
+
+	for {
+		if p.match(LEFT_PAREN) {
+			expr, err = p.finishCall(expr)
+			if err != nil {
+				return nil, err
+			}
+		} else if p.match(DOT) {
+			name, err := p.consume(IDENTIFIER, "Expect property name after '.'.")
+			if err != nil {
+				return nil, err
+			}
+			expr = &Get{Object: expr, Name: name}
+		} else if p.match(LEFT_BRACKET) {
+			index, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			bracket, err := p.consume(RIGHT_BRACKET, "Expect ']' after index.")
+			if err != nil {
+				return nil, err
+			}
+			expr = &ArrayIndex{Array: expr, Bracket: bracket, Index: index}
+		} else {
+			break
+		}
+	}
+
 	return expr, nil
+}
+
+func (p *Parser) finishCall(callee Expr) (Expr, error) {
+	arguments := []Expr{}
+	if !p.check(RIGHT_PAREN) {
+		for {
+			if len(arguments) >= 255 {
+				p.error(p.peek(), "Can't have more than 255 arguments.")
+			}
+			arg, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			arguments = append(arguments, arg)
+
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+
+	paren, err := p.consume(RIGHT_PAREN, "Expect ')' after arguments.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Call{Callee: callee, Paren: paren, Arguments: arguments}, nil
 }
 
 func (p *Parser) primary() (Expr, error) {
 	if p.match(IDENTIFIER) {
-		return &Variable{Name: p.previous()}, nil
+		nameToken := p.previous()
+		return &Variable{Name: &nameToken}, nil
 	}
 	if p.match(FALSE) {
 		return &Literal{Value: false}, nil
@@ -316,6 +420,33 @@ func (p *Parser) primary() (Expr, error) {
 	}
 	if p.match(NUMBER, STRING) {
 		return &Literal{Value: p.previous().Literal}, nil
+	}
+	if p.match(THIS) {
+		return &This{Keyword: p.previous()}, nil
+	}
+	if p.match(LEFT_BRACKET) {
+		bracket := p.previous()
+		values := []Expr{}
+		if !p.check(RIGHT_BRACKET) {
+			for {
+				valExpr, err := p.expression()
+				if err != nil {
+					return nil, err
+				}
+				values = append(values, valExpr)
+				if !p.match(COMMA) {
+					break
+				}
+				if p.check(RIGHT_BRACKET) {
+					return nil, p.error(p.peek(), "Trailing comma in array literal not allowed.")
+				}
+			}
+		}
+		_, err := p.consume(RIGHT_BRACKET, "Expect ']' after array elements.")
+		if err != nil {
+			return nil, err
+		}
+		return &ArrayLiteral{Bracket: bracket, Values: values}, nil
 	}
 	if p.match(LEFT_PAREN) {
 		expr, err := p.expression()
@@ -347,7 +478,7 @@ func (p *Parser) check(tokenType TokenType) bool {
 	return p.peek().Type == tokenType
 }
 
-func (p *Parser) advance() *Token {
+func (p *Parser) advance() Token {
 	if !p.isAtEnd() {
 		p.current++
 	}
@@ -358,25 +489,148 @@ func (p *Parser) isAtEnd() bool {
 	return p.peek().Type == EOF
 }
 
-func (p *Parser) peek() *Token {
+func (p *Parser) peek() Token {
 	return p.tokens[p.current]
 }
 
-func (p *Parser) previous() *Token {
+func (p *Parser) previous() Token {
 	return p.tokens[p.current-1]
 }
 
-func (p *Parser) consume(tokenType TokenType, message string) (*Token, error) {
+func (p *Parser) consume(tokenType TokenType, message string) (Token, error) {
 	if p.check(tokenType) {
 		return p.advance(), nil
 	}
-	return nil, p.error(p.peek(), message)
+	return Token{}, p.error(p.peek(), message)
 }
 
-func (p *Parser) error(token *Token, message string) error {
-	parseError(token, message)
-	return fmt.Errorf("parse error at '%s': %s", token.Lexeme, message)
+func (p *Parser) error(token Token, message string) error {
+	parseError(&token, message)
+	if token.Type != EOF {
+		return fmt.Errorf("parse error at '%s': %s", token.Lexeme, message)
+	} else {
+		return fmt.Errorf("parse error at end: %s", message)
+	}
 }
 
 func (p *Parser) synchronize() {
+	p.advance()
+
+	for !p.isAtEnd() {
+		if p.previous().Type == SEMICOLON {
+			return
+		}
+
+		switch p.peek().Type {
+		case CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN:
+			return
+		}
+
+		p.advance()
+	}
+}
+
+func (p *Parser) function(kind string) (Stmt, error) {
+	nameToken, err := p.consume(IDENTIFIER, fmt.Sprintf("Expect %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(LEFT_PAREN, fmt.Sprintf("Expect '(' after %s name.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	parameters := []Token{}
+	if !p.check(RIGHT_PAREN) {
+		for {
+			if len(parameters) >= 255 {
+				return nil, p.error(p.peek(), "Can't have more than 255 parameters.")
+			}
+			paramToken, err := p.consume(IDENTIFIER, "Expect parameter name.")
+			if err != nil {
+				return nil, err
+			}
+			parameters = append(parameters, paramToken)
+
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+	_, err = p.consume(RIGHT_PAREN, "Expect ')' after parameters.")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(LEFT_BRACE, fmt.Sprintf("Expect '{' before %s body.", kind))
+	if err != nil {
+		return nil, err
+	}
+
+	bodyStmt, err := p.blockStatement()
+	if err != nil {
+		return nil, err
+	}
+
+	block, ok := bodyStmt.(*Block)
+	if !ok {
+		prev := p.previous()
+		return nil, p.error(prev, "Internal error parsing function body.")
+	}
+
+	return &Function{Name: nameToken, Params: parameters, Body: block.Statements}, nil
+}
+
+func (p *Parser) returnStatement() (Stmt, error) {
+	keyword := p.previous()
+	var value Expr = nil
+	var err error
+
+	if !p.check(SEMICOLON) {
+		value, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	_, err = p.consume(SEMICOLON, "Expect ';' after return value.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Return{Keyword: keyword, Value: value}, nil
+}
+
+func (p *Parser) classDeclaration() (Stmt, error) {
+	name, err := p.consume(IDENTIFIER, "Expect class name.")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(LEFT_BRACE, "Expect '{' before class body.")
+	if err != nil {
+		return nil, err
+	}
+
+	methods := []*Function{}
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+		methodStmt, err := p.function("method")
+		if err != nil {
+			return nil, err
+		}
+		method, ok := methodStmt.(*Function)
+		if !ok {
+			prev := p.previous()
+			return nil, p.error(prev, "Internal error parsing class method.")
+		}
+		methods = append(methods, method)
+	}
+
+	_, err = p.consume(RIGHT_BRACE, "Expect '}' after class body.")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Class{Name: name, Methods: methods}, nil
 }

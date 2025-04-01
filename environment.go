@@ -18,7 +18,7 @@ func (e *Environment) Define(name string, value interface{}) {
 	e.values[name] = value
 }
 
-func (e *Environment) Get(name *Token) (interface{}, error) {
+func (e *Environment) Get(name Token) (interface{}, error) {
 	if val, ok := e.values[name.Lexeme]; ok {
 		return val, nil
 	}
@@ -27,10 +27,22 @@ func (e *Environment) Get(name *Token) (interface{}, error) {
 		return e.enclosing.Get(name)
 	}
 
-	return nil, fmt.Errorf("undefined variable '%s' at line %d", name.Lexeme, name.Line)
+	return nil, fmt.Errorf("[line %d] Undefined variable '%s'.", name.Line, name.Lexeme)
 }
 
-func (e *Environment) Assign(name *Token, value interface{}) error {
+func (e *Environment) LookUp(name string, keyword Token) (interface{}, error) {
+	if val, ok := e.values[name]; ok {
+		return val, nil
+	}
+
+	if e.enclosing != nil {
+		return e.enclosing.LookUp(name, keyword)
+	}
+
+	return nil, fmt.Errorf("[line %d] Undefined variable '%s'.", keyword.Line, name)
+}
+
+func (e *Environment) Assign(name Token, value interface{}) error {
 	if _, ok := e.values[name.Lexeme]; ok {
 		e.values[name.Lexeme] = value
 		return nil
@@ -40,5 +52,5 @@ func (e *Environment) Assign(name *Token, value interface{}) error {
 		return e.enclosing.Assign(name, value)
 	}
 
-	return fmt.Errorf("undefined variable '%s' at line %d", name.Lexeme, name.Line)
+	return fmt.Errorf("[line %d] Undefined variable '%s'.", name.Line, name.Lexeme)
 }

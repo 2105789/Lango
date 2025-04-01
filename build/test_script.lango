@@ -1,0 +1,241 @@
+// test_script.lango - Comprehensive Test Suite for Lango
+
+print "====== LANGU TEST SUITE ======";
+
+// ---- Section 1: Variables, Types, and Basic Output ----
+print "\n---- Section 1: Variables, Types, Basic Output ----";
+var numVar = 123.45;
+var strVar = "Lango Test";
+var boolVar = true;
+var nilVar = nil;
+var uninitializedVar;
+
+print numVar;         // Expected: 123.45
+print strVar;         // Expected: Lango Test
+print boolVar;        // Expected: true
+print nilVar;         // Expected: nil
+print uninitializedVar; // Expected: nil
+
+// Reassignment
+numVar = 543.21;
+strVar = strVar + " String"; // Concatenation test too
+boolVar = false;
+uninitializedVar = "now initialized";
+print numVar;         // Expected: 543.21
+print strVar;         // Expected: Lango Test String
+print boolVar;        // Expected: false
+print uninitializedVar; // Expected: now initialized
+
+// ---- Section 2: Arithmetic Operators ----
+print "\n---- Section 2: Arithmetic Operators ----";
+var a = 21;
+var b = 4;
+print a + b; // Expected: 25
+print a - b; // Expected: 17
+print a * b; // Expected: 84
+print a / b; // Expected: 5.25
+print a % b; // Expected: 1
+print -a;    // Expected: -21
+print "String" + " " + "Concatenation"; // Expected: String Concatenation
+// print "String" + 10; // This should cause a runtime error (Types mismatch) - uncomment to test
+
+// ---- Section 3: Comparison and Logical Operators ----
+print "\n---- Section 3: Comparison and Logical Operators ----";
+print 5 > 3;    // Expected: true
+print 5 < 3;    // Expected: false
+print 5 >= 5;   // Expected: true
+print 5 <= 4;   // Expected: false
+print 5 == 5;   // Expected: true
+print 5 != 5;   // Expected: false
+print "a" == "a"; // Expected: true
+print "a" != "b"; // Expected: true
+print nil == nil; // Expected: true
+print nil == false; // Expected: false
+print true == true; // Expected: true
+print false == false; // Expected: true
+print true != false; // Expected: true
+
+print !true;    // Expected: false
+print !false;   // Expected: true
+print !nil;     // Expected: true (nil is falsy)
+print !0;       // Expected: false (0 is truthy)
+print !"";      // Expected: false ("" is truthy)
+
+print true and true;    // Expected: true
+print true and false;   // Expected: false
+print false and true;   // Expected: false (short-circuit)
+print false and nil;    // Expected: false (short-circuit)
+print true or true;     // Expected: true (short-circuit)
+print true or false;    // Expected: true (short-circuit)
+print false or true;    // Expected: true
+print false or false;   // Expected: false
+print nil or "Truthy"; // Expected: true (truthiness of right operand)
+
+// ---- Section 4: Scopes and Blocks ----
+print "\n---- Section 4: Scopes and Blocks ----";
+var outer = "I am outer";
+{
+  var inner = "I am inner";
+  print outer; // Expected: I am outer
+  print inner; // Expected: I am inner
+  outer = "Modified outer from inner";
+}
+print outer; // Expected: Modified outer from inner
+// print inner; // This would be an error (correct)
+
+// ---- Section 5: Control Flow ----
+print "\n---- Section 5: Control Flow ----";
+var testNum = 10;
+if (testNum > 5) {
+  print "TestNum > 5"; // Expected: TestNum > 5
+} else {
+  print "TestNum <= 5";
+}
+
+if (testNum < 5) {
+  print "TestNum < 5";
+} else if (testNum == 10) {
+  print "TestNum == 10"; // Expected: TestNum == 10
+} else {
+  print "TestNum is something else";
+}
+
+var whileCount = 0;
+print "While loop:";
+while (whileCount < 3) {
+  print whileCount; // Expected: 0, 1, 2
+  whileCount = whileCount + 1;
+}
+
+print "For loop:";
+for (var forI = 0; forI < 3; forI = forI + 1) {
+  print forI; // Expected: 0, 1, 2
+}
+
+// ---- Section 6: Functions and Closures ----
+print "\n---- Section 6: Functions and Closures ----";
+fun simpleFunc() {
+  print "Simple function called";
+}
+simpleFunc(); // Expected: Simple function called
+
+fun funcWithParams(p1, p2) {
+  print "Params: " + p1 + ", " + p2;
+}
+funcWithParams("Arg1", 100); // Expected: Params: Arg1, 100
+
+fun funcWithReturn(val) {
+  return val * 2;
+}
+var doubled = funcWithReturn(21);
+print doubled; // Expected: 42
+
+fun recursiveFactorial(n) {
+  if (n <= 1) return 1;
+  return n * recursiveFactorial(n-1);
+}
+print recursiveFactorial(5); // Expected: 120
+
+fun outerFunc() {
+  var captured = "Captured Var";
+  fun innerFunc() {
+    print captured;
+  }
+  return innerFunc;
+}
+var closure1 = outerFunc();
+closure1(); // Expected: Captured Var
+
+fun makeAdder(addBy) {
+  fun adder(num) {
+    return num + addBy;
+  }
+  return adder;
+}
+var add5 = makeAdder(5);
+var add10 = makeAdder(10);
+print add5(100); // Expected: 105
+print add10(100); // Expected: 110
+
+fun implicitReturn() {
+  var x = 1; // No return statement
+}
+print implicitReturn(); // Expected: nil
+
+// ---- Section 7: Classes, Methods, 'this' ----
+print "\n---- Section 7: Classes, Methods, 'this' ----";
+class CoffeeMaker {
+  makeCoffee() {
+    print "Making coffee: " + this.brand;
+  }
+  setBrand(brandName) {
+    this.brand = brandName; // Set property using 'this'
+  }
+}
+
+var maker = CoffeeMaker();
+print maker; // Expected: <instance of CoffeeMaker>
+maker.setBrand("LangoBrew");
+maker.makeCoffee(); // Expected: Making coffee: LangoBrew
+print maker.brand; // Expected: LangoBrew
+
+// Test direct property setting
+maker.waterLevel = "full";
+print maker.waterLevel; // Expected: full
+
+// Test method returning 'this' (fluent interface pattern)
+class Calculator {
+  init(startValue) { // pseudo-constructor method
+     this.value = startValue;
+     return this; // Return instance
+  }
+  add(num) {
+    this.value = this.value + num;
+    return this; // Return instance for chaining
+  }
+  get() {
+    return this.value;
+  }
+}
+var calc = Calculator();
+// Note: We don't have real constructors yet, so init() is just a method
+calc.init(10);
+calc.add(5).add(10); // Method chaining
+print calc.get(); // Expected: 25
+
+// ---- Section 8: Arrays/Lists ----
+print "\n---- Section 8: Arrays/Lists ----";
+var nums = [10, 20, 30];
+var mixed = ["a", true, 42, nil, nums];
+print nums;    // Expected: [10, 20, 30]
+print mixed;   // Expected: [a, true, 42, nil, [10, 20, 30]]
+
+print nums[0];   // Expected: 10
+print mixed[1];  // Expected: true
+print mixed[4];  // Expected: [10, 20, 30]
+print mixed[4][1]; // Expected: 20 (Nested access)
+
+nums[1] = 25;
+print nums;    // Expected: [10, 25, 30]
+
+mixed[0] = "A";
+mixed[4][2] = 35;
+print mixed;   // Expected: [A, true, 42, nil, [10, 25, 35]]
+
+// Assigning different type
+nums[0] = "not a number";
+print nums;    // Expected: [not a number, 25, 30]
+
+var emptyArray = [];
+print emptyArray; // Expected: []
+
+// ---- Section 9: Potential Runtime Errors (Optional: Uncomment to test) ----
+// print "Testing expected errors...";
+// print nonExistentVar; // Undefined variable
+// print 10 + "hello"; // Operands must be two numbers or two strings
+// var badCall = 10; badCall(); // Can only call functions and classes
+// class ErrClass {} var errInst = ErrClass(); print errInst.noProp; // Undefined property
+// var errArr = [1]; print errArr[1]; // Array index out of bounds
+// var errArr2 = [1]; errArr2[1] = 2; // Array index out of bounds
+
+print "\n====== TEST SUITE COMPLETE ======";

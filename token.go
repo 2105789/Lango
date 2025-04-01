@@ -18,6 +18,8 @@ const (
 	SLASH
 	STAR
 	MOD
+	LEFT_BRACKET
+	RIGHT_BRACKET
 
 	// One or two character tokens.
 	BANG

@@ -57,19 +57,15 @@ func run(source string) {
 	scanner := NewScanner(source)
 	tokens := scanner.ScanTokens()
 
-	tokenPtrs := make([]*Token, len(tokens))
-	for i := range tokens {
-		tokenPtrs[i] = &tokens[i]
-	}
-
-	parser := NewParser(tokenPtrs)
-	expression, err := parser.Parse()
+	parser := NewParser(tokens)
+	statements, err := parser.Parse()
 	if err != nil {
-		fmt.Println("Error during parsing:", err)
 		return
 	}
 
-	interpreter.Interpret(expression)
+	if hadRuntimeError { return }
+
+	interpreter.Interpret(statements)
 }
 
 func printEnvironment(env *Environment) {
