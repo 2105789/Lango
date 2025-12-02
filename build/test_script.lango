@@ -203,8 +203,50 @@ calc.init(10);
 calc.add(5).add(10); // Method chaining
 print calc.get(); // Expected: 25
 
-// ---- Section 8: Arrays/Lists ----
-print "\n---- Section 8: Arrays/Lists ----";
+// ---- Section 8: Escape Sequences ----
+print "\n---- Section 8: Escape Sequences ----";
+print "Newline:\nSecond Line";  // Expected: Newline: (newline) Second Line
+print "Tab:\there";             // Expected: Tab: (tab) here
+print "Backslash: \\";          // Expected: Backslash: \
+var message = "Multi\nLine\nText";
+print message;                   // Expected: Multi (newline) Line (newline) Text
+
+// ---- Section 9: Object Literals ----
+print "\n---- Section 9: Object Literals ----";
+var person = {name: "Alice", age: 25, city: "Boston"};
+print person;                    // Expected: {name: Alice, age: 25, city: Boston}
+print person.name;               // Expected: Alice
+print person.age;                // Expected: 25
+
+// Modify properties
+person.age = 26;
+print person.age;                // Expected: 26
+
+// Empty object
+var empty = {};
+print empty;                     // Expected: {}
+
+// Nested objects
+var config = {server: {host: "localhost", port: 8080}};
+print config.server.host;        // Expected: localhost
+print config.server.port;        // Expected: 8080
+
+// Mixed value types
+var mixed = {str: "hello", num: 42, bool: true, arr: [1, 2, 3]};
+print mixed.str;                 // Expected: hello
+print mixed.num;                 // Expected: 42
+print mixed.arr;                 // Expected: [1, 2, 3]
+print mixed.arr[1];              // Expected: 2
+
+// Object with expressions
+var x = 10;
+var y = 20;
+var calc = {sum: x + y, product: x * y, difference: x - y};
+print calc.sum;                  // Expected: 30
+print calc.product;              // Expected: 200
+
+// ---- Section 10: Arrays/Lists ----
+print "\n---- Section 10: Arrays/Lists ----";
 var nums = [10, 20, 30];
 var mixed = ["a", true, 42, nil, nums];
 print nums;    // Expected: [10, 20, 30]
@@ -229,7 +271,7 @@ print nums;    // Expected: [not a number, 25, 30]
 var emptyArray = [];
 print emptyArray; // Expected: []
 
-// ---- Section 9: Potential Runtime Errors (Optional: Uncomment to test) ----
+// ---- Section 11: Potential Runtime Errors (Optional: Uncomment to test) ----
 // print "Testing expected errors...";
 // print nonExistentVar; // Undefined variable
 // print 10 + "hello"; // Operands must be two numbers or two strings

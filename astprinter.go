@@ -319,6 +319,12 @@ func (ap *AstPrinter) VisitArrayAssignExpr(expr *ArrayAssign) (interface{}, erro
 	return ap.parenthesize("assign-index", expr.Assignee.Array, expr.Assignee.Index, expr.Value)
 }
 
+// Add implementation for ObjectLiteral expression
+func (ap *AstPrinter) VisitObjectLiteralExpr(expr *ObjectLiteral) (interface{}, error) {
+	// Represent as (object key1:val1 key2:val2 ...)
+	return ap.parenthesize("object", expr.Values...)
+}
+
 // parenthesize now returns an error
 func (ap *AstPrinter) parenthesize(name string, exprs ...Expr) (string, error) {
 	var buf bytes.Buffer

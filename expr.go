@@ -138,3 +138,15 @@ type ArrayAssign struct {
 func (a *ArrayAssign) Accept(visitor Visitor) (interface{}, error) {
 	return visitor.VisitArrayAssignExpr(a)
 }
+
+// Object Literal Expression (e.g., {name: "John", age: 30})
+type ObjectLiteral struct {
+	Brace  Token   // The opening brace token '{'
+	Keys   []Token // Property keys (identifiers or strings)
+	Values []Expr  // Property values (expressions)
+}
+
+func (o *ObjectLiteral) Accept(visitor Visitor) (interface{}, error) {
+	return visitor.VisitObjectLiteralExpr(o)
+}
+

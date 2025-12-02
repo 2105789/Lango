@@ -80,6 +80,8 @@ func (s *Scanner) scanToken() {
 		s.addToken(STAR)
 	case '%':
 		s.addToken(MOD)
+	case ':':
+		s.addToken(COLON)
 	case '!':
 		if s.match('=') {
 			s.addToken(BANG_EQUAL)
@@ -184,7 +186,47 @@ func (s *Scanner) string() {
 	s.advance()
 
 	value := s.source[s.start+1 : s.current-1]
-	s.addTokenWithLiteral(STRING, value)
+	// Process escape sequences in the string
+	processedValue := s.processEscapeSequences(value)
+	s.addTokenWithLiteral(STRING, processedValue)
+}
+
+// processEscapeSequences converts escape sequences to their actual characters
+func (s *Scanner) processEscapeSequences(str string) string {
+	result := ""
+	i := 0
+	for i < len(str) {
+		if str[i] == '\\' && i+1 < len(str) {
+			switch str[i+1] {
+			case 'n':
+				result += "\n"
+				i += 2
+			case 't':
+				result += "\t"
+				i += 2
+			case 'r':
+				result += "\r"
+				i += 2
+			case '\\':
+				result += "\\"
+				i += 2
+			case '"':
+				result += "\""
+				i += 2
+			case '\'':
+				result += "'"
+				i += 2
+			default:
+				// Unknown escape sequence, just keep the backslash
+				result += string(str[i])
+				i++
+			}
+		} else {
+			result += string(str[i])
+			i++
+		}
+	}
+	return result
 }
 
 func (s *Scanner) number() {

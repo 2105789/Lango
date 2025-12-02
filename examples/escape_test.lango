@@ -1,0 +1,4 @@
+// Simple escape sequence test
+print "Line 1\nLine 2";
+print "Tab\there";
+print "Back\\slash";

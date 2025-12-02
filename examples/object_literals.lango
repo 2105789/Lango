@@ -1,0 +1,40 @@
+// Test object literals
+
+// Simple object
+var person = {name: "John", age: 30, city: "New York"};
+print person;
+print person.name;
+print person.age;
+print person.city;
+
+// Modify object properties
+person.age = 31;
+print "After birthday:";
+print person;
+print person.age;
+
+// Empty object
+var empty = {};
+print empty;
+
+// Object with different value types
+var mixed = {str: "hello", num: 42, bool: true, nil_val: nil};
+print mixed;
+
+// Nested objects
+var nested = {outer: {inner: "value"}};
+print nested;
+print nested.outer;
+print nested.outer.inner;
+
+// Object with expressions as values
+var x = 10;
+var y = 20;
+var calc = {sum: x + y, product: x * y, difference: x - y};
+print calc;
+print calc.sum;
+print calc.product;
+
+// String keys
+var withStringKeys = {"first name": "Alice", "last name": "Smith"};
+print withStringKeys;

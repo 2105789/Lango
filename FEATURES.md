@@ -8,7 +8,88 @@ Lango now includes comprehensive networking capabilities, JSON support, file I/O
 
 ## New Features
 
-### 1. HTTP Networking
+### 1. Escape Sequences
+
+String literals now support escape sequences for special characters.
+
+#### Supported Escape Sequences
+
+- `\n` - Newline
+- `\t` - Tab
+- `\r` - Carriage return
+- `\\` - Backslash
+- `\"` - Double quote
+- `\'` - Single quote
+
+#### Example
+
+```lango
+print "Hello\nWorld";        // Hello on line 1, World on line 2
+print "Tab\there";           // Tab followed by here
+print "Quote: \"text\"";     // Quote: "text"
+print "Path: C:\\folder\\";  // Path: C:\folder\
+
+var message = "Line 1\n\tIndented line\nLine 3";
+print message;
+```
+
+### 2. Object Literals
+
+Create objects directly using `{key: value}` syntax without needing classes.
+
+#### Syntax
+
+```lango
+var obj = {key1: value1, key2: value2, ...};
+```
+
+#### Features
+
+- Keys can be identifiers or string literals
+- Values can be any expression
+- Supports nested objects
+- Property access with dot notation
+- Property modification with assignment
+
+#### Example
+
+```lango
+// Basic object
+var person = {name: "John", age: 30, city: "NYC"};
+print person;         // {name: John, age: 30, city: NYC}
+print person.name;    // John
+person.age = 31;      // Modify property
+
+// Empty object
+var empty = {};
+
+// Nested objects
+var config = {
+  server: {host: "localhost", port: 8080},
+  database: {name: "mydb", timeout: 5000}
+};
+print config.server.host;  // localhost
+
+// Mixed value types
+var data = {
+  string: "hello",
+  number: 42,
+  boolean: true,
+  array: [1, 2, 3],
+  nested: {key: "value"}
+};
+
+// Expressions as values
+var x = 10;
+var y = 20;
+var calc = {sum: x + y, product: x * y};
+print calc.sum;      // 30
+
+// String keys (useful for keys with spaces)
+var person2 = {"first name": "Alice", "last name": "Smith"};
+```
+
+### 3. HTTP Networking
 
 Lango now supports making HTTP requests with full support for GET, POST, PUT, and DELETE methods.
 
@@ -194,6 +275,8 @@ print "Done!";
 
 The `examples/` directory contains comprehensive demonstrations:
 
+- **`escape_sequences.lango`** - Escape sequence usage
+- **`object_literals.lango`** - Object literal creation and manipulation
 - **`api_example.lango`** - HTTP requests and JSON handling
 - **`file_example.lango`** - File I/O operations
 - **`stdlib_example.lango`** - Standard library functions
@@ -256,9 +339,8 @@ All networking, file I/O, and standard library functions are implemented in Go, 
 
 ## Limitations
 
-- JSON strings in Lango code currently require avoiding escape sequences
-- No object literal syntax (use JSON strings instead)
 - Synchronous HTTP requests only (no async/await)
+- No module/package system yet
 
 ## Future Enhancements
 

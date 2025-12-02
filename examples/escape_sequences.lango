@@ -1,0 +1,7 @@
+// Comprehensive escape sequence test
+print "Newline test:\nLine 2";
+print "Tab test:\ttabbed";
+print "Backslash: \\";
+print "Multiple:\n\tIndented\n\tLines";
+var message = "Hello\nWorld";
+print message;

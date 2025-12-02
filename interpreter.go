@@ -559,6 +559,23 @@ func (i *Interpreter) stringify(object interface{}) string {
 		builder.WriteString("]")
 		return builder.String()
 	}
+	// Add handling for maps (objects)
+	if mapObj, ok := object.(map[string]interface{}); ok {
+		var builder strings.Builder
+		builder.WriteString("{")
+		idx := 0
+		for key, val := range mapObj {
+			if idx > 0 {
+				builder.WriteString(", ")
+			}
+			builder.WriteString(key)
+			builder.WriteString(": ")
+			builder.WriteString(i.stringify(val))
+			idx++
+		}
+		builder.WriteString("}")
+		return builder.String()
+	}
 	return fmt.Sprintf("%v", object)
 }
 
@@ -685,23 +702,26 @@ func (i *Interpreter) VisitSetExpr(expr *Set) (interface{}, error) {
 		return nil, err
 	}
 
-	// Check if the object is an instance
-	instance, ok := object.(*LangoInstance)
-	if !ok {
-		return nil, i.error(expr.Name, "Only instances have fields.")
-	}
-
 	// Evaluate the value being assigned
 	value, err := i.evaluate(expr.Value)
 	if err != nil {
 		return nil, err
 	}
 
-	// Call the instance's Set method
-	instance.Set(expr.Name, value)
+	// Check if the object is an instance
+	if instance, ok := object.(*LangoInstance); ok {
+		// Call the instance's Set method
+		instance.Set(expr.Name, value)
+		return value, nil
+	}
 
-	// Assignment expression returns the assigned value
-	return value, nil 
+	// Check if the object is a map (from object literals or JSON)
+	if mapObj, ok := object.(map[string]interface{}); ok {
+		mapObj[expr.Name.Lexeme] = value
+		return value, nil
+	}
+
+	return nil, i.error(expr.Name, "Only instances and objects have fields.")
 }
 
 // Add implementation for This expression
@@ -814,4 +834,40 @@ func (i *Interpreter) VisitArrayAssignExpr(expr *ArrayAssign) (interface{}, erro
 
 	// Assignment returns the assigned value
 	return value, nil
+}
+
+// Add implementation for ObjectLiteral expression
+func (i *Interpreter) VisitObjectLiteralExpr(expr *ObjectLiteral) (interface{}, error) {
+	// Create a map to hold the object properties
+	obj := make(map[string]interface{})
+
+	// Iterate through keys and values
+	for idx, keyToken := range expr.Keys {
+		var key string
+		
+		// Get the key string
+		if keyToken.Type == IDENTIFIER {
+			key = keyToken.Lexeme
+		} else if keyToken.Type == STRING {
+			// String literals already have their literal value
+			if strKey, ok := keyToken.Literal.(string); ok {
+				key = strKey
+			} else {
+				return nil, i.error(keyToken, "Invalid object key.")
+			}
+		} else {
+			return nil, i.error(keyToken, "Object keys must be identifiers or strings.")
+		}
+
+		// Evaluate the value expression
+		value, err := i.evaluate(expr.Values[idx])
+		if err != nil {
+			return nil, err
+		}
+
+		// Add to the map
+		obj[key] = value
+	}
+
+	return obj, nil
 }

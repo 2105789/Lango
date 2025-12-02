@@ -20,6 +20,7 @@ const (
 	MOD
 	LEFT_BRACKET
 	RIGHT_BRACKET
+	COLON
 
 	// One or two character tokens.
 	BANG

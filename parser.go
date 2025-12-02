@@ -448,6 +448,55 @@ func (p *Parser) primary() (Expr, error) {
 		}
 		return &ArrayLiteral{Bracket: bracket, Values: values}, nil
 	}
+	if p.match(LEFT_BRACE) {
+		brace := p.previous()
+		keys := []Token{}
+		values := []Expr{}
+
+		// Parse key-value pairs
+		if !p.check(RIGHT_BRACE) {
+			for {
+				// Key can be an identifier or string
+				var key Token
+				if p.match(IDENTIFIER, STRING) {
+					key = p.previous()
+				} else {
+					return nil, p.error(p.peek(), "Expect property key (identifier or string).")
+				}
+
+				// Expect colon
+				_, err := p.consume(COLON, "Expect ':' after property key.")
+				if err != nil {
+					return nil, err
+				}
+
+				// Parse value expression
+				valueExpr, err := p.expression()
+				if err != nil {
+					return nil, err
+				}
+
+				keys = append(keys, key)
+				values = append(values, valueExpr)
+
+				// Check for comma
+				if !p.match(COMMA) {
+					break
+				}
+				// Allow trailing comma
+				if p.check(RIGHT_BRACE) {
+					break
+				}
+			}
+		}
+
+		_, err := p.consume(RIGHT_BRACE, "Expect '}' after object literal.")
+		if err != nil {
+			return nil, err
+		}
+
+		return &ObjectLiteral{Brace: brace, Keys: keys, Values: values}, nil
+	}
 	if p.match(LEFT_PAREN) {
 		expr, err := p.expression()
 		if err != nil {

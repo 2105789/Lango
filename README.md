@@ -10,8 +10,10 @@ A modern, dynamically-typed programming language implemented in Go that combines
 - **Dynamic Typing** - Flexible type system
 - **First-Class Functions** - Functions as values, closures, higher-order functions
 - **Object-Oriented** - Classes with methods, properties, and inheritance via `this`
+- **Object Literals** - Create objects with `{key: value}` syntax
 - **Control Flow** - if/else, while, for loops
 - **Arrays/Lists** - Dynamic arrays with indexing and nested structures
+- **Escape Sequences** - Support for `\n`, `\t`, `\r`, `\\`, `\"`, `\'` in strings
 - **Lexical Scoping** - Block-level scope with proper closure support
 
 ### 🌐 Networking & HTTP
@@ -281,6 +283,30 @@ var nested = [[1, 2], [3, 4]];
 print nested[0][1];      // 2
 ```
 
+### Object Literals
+```lango
+// Create objects with literal syntax
+var person = {name: "Alice", age: 30, city: "NYC"};
+print person.name;       // Alice
+person.age = 31;         // Modify property
+
+// Nested objects
+var config = {server: {host: "localhost", port: 8080}};
+print config.server.host; // localhost
+
+// Mixed values
+var data = {str: "hello", num: 42, arr: [1, 2, 3]};
+```
+
+### Escape Sequences
+```lango
+print "Line 1\nLine 2";     // Newline
+print "Tab\there";          // Tab
+print "Quote: \"hi\"";      // Escaped quotes  
+print "Back\\slash";        // Backslash
+var multiline = "First\n\tIndented\nLast";
+```
+
 ## 🎯 Use Cases
 
 - **REST API Clients** - Build clients to consume REST APIs
@@ -341,8 +367,8 @@ go build
 
 Contributions are welcome! Areas for improvement:
 
-- [ ] Add escape sequence support to scanner
-- [ ] Implement object literal syntax `{key: value}`
+- [x] Add escape sequence support to scanner (✅ Completed)
+- [x] Implement object literal syntax `{key: value}` (✅ Completed)
 - [ ] Add async/await for non-blocking operations
 - [ ] WebSocket support
 - [ ] Database drivers (SQL, MongoDB)
