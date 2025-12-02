@@ -30,6 +30,7 @@ type Visitor interface {
 	VisitArrayIndexExpr(*ArrayIndex) (interface{}, error)
 	VisitArrayAssignExpr(*ArrayAssign) (interface{}, error)
 	VisitObjectLiteralExpr(*ObjectLiteral) (interface{}, error)
+	VisitTernaryExpr(*Ternary) (interface{}, error)
 }
 
 type Expression struct {

@@ -21,8 +21,16 @@ const (
 	LEFT_BRACKET
 	RIGHT_BRACKET
 	COLON
+	QUESTION
 
-	// One or two character tokens.
+	// Two character tokens.
+	PLUS_PLUS
+	MINUS_MINUS
+	PLUS_EQUAL
+	MINUS_EQUAL
+	STAR_EQUAL
+	SLASH_EQUAL
+	MOD_EQUAL
 	BANG
 	BANG_EQUAL
 	EQUAL

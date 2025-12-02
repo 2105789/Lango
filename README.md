@@ -11,6 +11,10 @@ A modern, dynamically-typed programming language implemented in Go that combines
 - **First-Class Functions** - Functions as values, closures, higher-order functions
 - **Object-Oriented** - Classes with methods, properties, and inheritance via `this`
 - **Object Literals** - Create objects with `{key: value}` syntax
+- **String Interpolation** - Embed expressions in strings with `${expr}`
+- **Compound Assignment** - `+=`, `-=`, `*=`, `/=` operators
+- **Increment/Decrement** - `++`, `--` operators
+- **Ternary Operator** - `condition ? true : false`
 - **Control Flow** - if/else, while, for loops
 - **Arrays/Lists** - Dynamic arrays with indexing and nested structures
 - **Escape Sequences** - Support for `\n`, `\t`, `\r`, `\\`, `\"`, `\'` in strings
@@ -305,6 +309,23 @@ print "Tab\there";          // Tab
 print "Quote: \"hi\"";      // Escaped quotes  
 print "Back\\slash";        // Backslash
 var multiline = "First\n\tIndented\nLast";
+```
+
+### Syntax Enhancements
+```lango
+// String Interpolation
+var name = "User";
+print "Hello ${name}";
+
+// Compound Assignment
+var x = 10;
+x += 5; // 15
+
+// Increment/Decrement
+x++; // 16
+
+// Ternary Operator
+var status = x > 10 ? "High" : "Low";
 ```
 
 ## 🎯 Use Cases

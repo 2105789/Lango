@@ -1,0 +1,35 @@
+// Lango Syntax Enhancements Example
+
+print "--- String Interpolation ---";
+var name = "Lango";
+var version = 1.2;
+print "Welcome to ${name} version ${version}!";
+print "Math works too: 5 + 10 = ${5 + 10}";
+
+print "\n--- Compound Assignment ---";
+var score = 0;
+print "Initial score: " + toString(score);
+score += 10;
+print "After += 10: " + toString(score);
+score *= 2;
+print "After *= 2: " + toString(score);
+score -= 5;
+print "After -= 5: " + toString(score);
+
+print "\n--- Increment/Decrement ---";
+var count = 0;
+count++;
+print "Count after ++: " + toString(count);
+count++;
+print "Count after ++: " + toString(count);
+count--;
+print "Count after --: " + toString(count);
+
+print "\n--- Ternary Operator ---";
+var age = 20;
+var status = age >= 18 ? "Adult" : "Minor";
+print "Age " + toString(age) + " is " + status;
+
+age = 15;
+status = age >= 18 ? "Adult" : "Minor";
+print "Age " + toString(age) + " is " + status;

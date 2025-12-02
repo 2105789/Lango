@@ -203,27 +203,118 @@ func (p *Parser) expression() (Expr, error) {
 }
 
 func (p *Parser) assignment() (Expr, error) {
-	expr, err := p.logic_or()
+	expr, err := p.ternary()
 	if err != nil {
 		return nil, err
 	}
 
-	if p.match(EQUAL) {
-		equals := p.previous()
+	if p.match(EQUAL, PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL, MOD_EQUAL) {
+		operator := p.previous()
 		value, err := p.assignment()
 		if err != nil {
 			return nil, err
 		}
 
 		if varExpr, ok := expr.(*Variable); ok {
-			return &Assign{Name: varExpr.Name, Value: value}, nil
+			name := varExpr.Name
+			if operator.Type == EQUAL {
+				return &Assign{Name: name, Value: value}, nil
+			}
+			// Desugar compound assignment: a += b  ->  a = a + b
+			// We need to create a Binary expression: a + b
+			// But we need the 'a' expression again. 
+			// Since 'expr' is the variable expression for 'a', we can reuse it?
+			// Yes, AST nodes are immutable-ish, reusing is fine.
+			// Operator mapping: PLUS_EQUAL -> PLUS
+			var binOp TokenType
+			switch operator.Type {
+			case PLUS_EQUAL: binOp = PLUS
+			case MINUS_EQUAL: binOp = MINUS
+			case STAR_EQUAL: binOp = STAR
+			case SLASH_EQUAL: binOp = SLASH
+			case MOD_EQUAL: binOp = MOD
+			}
+			
+			// Create a synthetic token for the binary operator
+			opToken := Token{Type: binOp, Lexeme: operator.Lexeme[:1], Line: operator.Line}
+			
+			binaryExpr := &Binary{Left: expr, Operator: &opToken, Right: value}
+			return &Assign{Name: name, Value: binaryExpr}, nil
+
 		} else if getExpr, ok := expr.(*Get); ok {
-			return &Set{Object: getExpr.Object, Name: getExpr.Name, Value: value}, nil
+			if operator.Type == EQUAL {
+				return &Set{Object: getExpr.Object, Name: getExpr.Name, Value: value}, nil
+			}
+			// Desugar set: obj.prop += val -> obj.prop = obj.prop + val
+			var binOp TokenType
+			switch operator.Type {
+			case PLUS_EQUAL: binOp = PLUS
+			case MINUS_EQUAL: binOp = MINUS
+			case STAR_EQUAL: binOp = STAR
+			case SLASH_EQUAL: binOp = SLASH
+			case MOD_EQUAL: binOp = MOD
+			}
+			opToken := Token{Type: binOp, Lexeme: operator.Lexeme[:1], Line: operator.Line}
+			
+			// We need to duplicate the Get expression for the read
+			// This might evaluate Object twice if we are not careful?
+			// In a tree-walk interpreter, yes, it will evaluate Object twice.
+			// e.g. getObj().prop += 1  ->  getObj().prop = getObj().prop + 1
+			// This is a known issue with simple desugaring. 
+			// For now, we accept this limitation or we'd need a special AST node for CompoundSet.
+			// Given the goal is "easy to write", this is acceptable for now.
+			
+			binaryExpr := &Binary{Left: expr, Operator: &opToken, Right: value}
+			return &Set{Object: getExpr.Object, Name: getExpr.Name, Value: binaryExpr}, nil
+
 		} else if indexExpr, ok := expr.(*ArrayIndex); ok {
-			return &ArrayAssign{Assignee: *indexExpr, Value: value}, nil
+			if operator.Type == EQUAL {
+				return &ArrayAssign{Assignee: *indexExpr, Value: value}, nil
+			}
+			// Desugar array assign: arr[i] += val -> arr[i] = arr[i] + val
+			var binOp TokenType
+			switch operator.Type {
+			case PLUS_EQUAL: binOp = PLUS
+			case MINUS_EQUAL: binOp = MINUS
+			case STAR_EQUAL: binOp = STAR
+			case SLASH_EQUAL: binOp = SLASH
+			case MOD_EQUAL: binOp = MOD
+			}
+			opToken := Token{Type: binOp, Lexeme: operator.Lexeme[:1], Line: operator.Line}
+			
+			binaryExpr := &Binary{Left: expr, Operator: &opToken, Right: value}
+			return &ArrayAssign{Assignee: *indexExpr, Value: binaryExpr}, nil
 		}
 
-		return nil, p.error(equals, "Invalid assignment target.")
+		return nil, p.error(operator, "Invalid assignment target.")
+	}
+
+	return expr, nil
+}
+
+func (p *Parser) ternary() (Expr, error) {
+	expr, err := p.logic_or()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(QUESTION) {
+		thenBranch, err := p.expression() // Allow assignment in branches
+		if err != nil {
+			return nil, err
+		}
+		
+		_, err = p.consume(COLON, "Expect ':' after then branch of ternary operator.")
+		if err != nil {
+			return nil, err
+		}
+		
+		elseBranch, err := p.ternary() // Right associative? a ? b : c ? d : e -> a ? b : (c ? d : e)
+		if err != nil {
+			return nil, err
+		}
+		
+		return &Ternary{Condition: expr, ThenBranch: thenBranch, ElseBranch: elseBranch}, nil
 	}
 
 	return expr, nil
@@ -369,6 +460,46 @@ func (p *Parser) call() (Expr, error) {
 				return nil, err
 			}
 			expr = &ArrayIndex{Array: expr, Bracket: bracket, Index: index}
+		} else if p.match(PLUS_PLUS, MINUS_MINUS) {
+			// Postfix increment/decrement
+			// Desugar: i++  ->  i = i + 1 (but return old value? No, we decided new value for simplicity)
+			// Wait, if we desugar to i = i + 1, it returns the new value.
+			// C/Java i++ returns OLD value. ++i returns NEW value.
+			// If we want "easy to write", users might expect C behavior.
+			// But implementing "return old value" via desugaring is hard without a temporary variable block.
+			// For simplicity, we will make it behave like ++i (return new value).
+			// Or we can just say it's a statement mostly.
+			
+			operator := p.previous()
+			var binOp TokenType
+			if operator.Type == PLUS_PLUS {
+				binOp = PLUS
+			} else {
+				binOp = MINUS
+			}
+			
+			// We need to check if 'expr' is a valid assignment target
+			if varExpr, ok := expr.(*Variable); ok {
+				// i = i + 1
+				opToken := Token{Type: binOp, Lexeme: operator.Lexeme[:1], Line: operator.Line}
+				one := &Literal{Value: float64(1)}
+				binaryExpr := &Binary{Left: expr, Operator: &opToken, Right: one}
+				expr = &Assign{Name: varExpr.Name, Value: binaryExpr}
+			} else if getExpr, ok := expr.(*Get); ok {
+				// obj.prop = obj.prop + 1
+				opToken := Token{Type: binOp, Lexeme: operator.Lexeme[:1], Line: operator.Line}
+				one := &Literal{Value: float64(1)}
+				binaryExpr := &Binary{Left: expr, Operator: &opToken, Right: one}
+				expr = &Set{Object: getExpr.Object, Name: getExpr.Name, Value: binaryExpr}
+			} else if indexExpr, ok := expr.(*ArrayIndex); ok {
+				// arr[i] = arr[i] + 1
+				opToken := Token{Type: binOp, Lexeme: operator.Lexeme[:1], Line: operator.Line}
+				one := &Literal{Value: float64(1)}
+				binaryExpr := &Binary{Left: expr, Operator: &opToken, Right: one}
+				expr = &ArrayAssign{Assignee: *indexExpr, Value: binaryExpr}
+			} else {
+				return nil, p.error(operator, "Invalid increment/decrement target.")
+			}
 		} else {
 			break
 		}

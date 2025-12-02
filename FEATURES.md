@@ -352,6 +352,47 @@ Potential next-phase features:
 - More advanced string operations
 - Module/package system
 
+### 9. Syntax Enhancements
+
+New syntax features for better developer experience.
+
+#### String Interpolation
+Embed expressions directly in strings using `${}`.
+
+```lango
+var name = "Lango";
+print "Hello ${name}!";      // Hello Lango!
+print "Sum: ${1 + 2}";       // Sum: 3
+```
+
+#### Compound Assignment
+Shorthand operators for common arithmetic operations.
+
+```lango
+var a = 10;
+a += 5;  // a = 15
+a -= 2;  // a = 13
+a *= 2;  // a = 26
+a /= 2;  // a = 13
+```
+
+#### Increment/Decrement
+Postfix operators for incrementing and decrementing.
+
+```lango
+var i = 0;
+i++;     // i = 1
+i--;     // i = 0
+```
+
+#### Ternary Operator
+Conditional expression operator.
+
+```lango
+var age = 20;
+var type = age >= 18 ? "Adult" : "Child";
+```
+
 ## Conclusion
 
 With these enhancements, Lango is now a capable language for:

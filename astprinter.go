@@ -346,3 +346,8 @@ func (ap *AstPrinter) parenthesize(name string, exprs ...Expr) (string, error) {
 	buf.WriteString(")")
 	return buf.String(), nil // Return string and nil error
 }
+
+// Add implementation for Ternary expression
+func (ap *AstPrinter) VisitTernaryExpr(expr *Ternary) (interface{}, error) {
+	return ap.parenthesize("ternary", expr.Condition, expr.ThenBranch, expr.ElseBranch)
+}

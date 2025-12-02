@@ -150,3 +150,12 @@ func (o *ObjectLiteral) Accept(visitor Visitor) (interface{}, error) {
 	return visitor.VisitObjectLiteralExpr(o)
 }
 
+type Ternary struct {
+	Condition Expr
+	ThenBranch Expr
+	ElseBranch Expr
+}
+
+func (t *Ternary) Accept(visitor Visitor) (interface{}, error) {
+	return visitor.VisitTernaryExpr(t)
+}

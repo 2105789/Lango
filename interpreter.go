@@ -424,9 +424,10 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) (interface{}, error) {
 			}
 		}
 		if lStr, ok := left.(string); ok {
-			if rStr, ok := right.(string); ok {
-				return lStr + rStr, nil
-			}
+			return lStr + i.stringify(right), nil
+		}
+		if rStr, ok := right.(string); ok {
+			return i.stringify(left) + rStr, nil
 		}
 		return nil, i.error(*expr.Operator, "Operands must be two numbers or two strings.")
 	case GREATER:
@@ -823,16 +824,14 @@ func (i *Interpreter) VisitArrayAssignExpr(expr *ArrayAssign) (interface{}, erro
 		return nil, i.error(expr.Assignee.Bracket, fmt.Sprintf("Array index out of bounds (%d for size %d).", indexInt, len(arrayVal)))
 	}
 
-	// Evaluate the value to assign
+	// Evaluate the value
 	value, err := i.evaluate(expr.Value)
 	if err != nil {
 		return nil, err
 	}
 
-	// Perform the assignment
+	// Assign
 	arrayVal[indexInt] = value
-
-	// Assignment returns the assigned value
 	return value, nil
 }
 
@@ -870,4 +869,18 @@ func (i *Interpreter) VisitObjectLiteralExpr(expr *ObjectLiteral) (interface{}, 
 	}
 
 	return obj, nil
+}
+
+// Add implementation for Ternary expression
+func (i *Interpreter) VisitTernaryExpr(expr *Ternary) (interface{}, error) {
+	cond, err := i.evaluate(expr.Condition)
+	if err != nil {
+		return nil, err
+	}
+
+	if i.isTruthy(cond) {
+		return i.evaluate(expr.ThenBranch)
+	} else {
+		return i.evaluate(expr.ElseBranch)
+	}
 }
