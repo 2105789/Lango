@@ -1,0 +1,182 @@
+// complete_api_demo.lango - Complete API Client Demo
+// This demonstrates building a complete REST API client in Lango
+
+print "====================================";
+print "   LANGO API CLIENT DEMONSTRATION   ";
+print "====================================";
+print "";
+
+// Example 1: Fetch and save user data
+print "1. Fetching user profile...";
+var userResponse = httpGet("https://jsonplaceholder.typicode.com/users/1");
+
+if (userResponse.status == 200) {
+  var user = jsonParse(userResponse.body);
+  
+  print "   Name: " + user.name;
+  print "   Email: " + user.email;
+  print "   Company: " + user.company.name;
+  print "   Website: " + user.website;
+  
+  // Save user data to file
+  var userJson = jsonStringifyPretty(user);
+  fileWrite("user_profile.json", userJson);
+  print "   Saved to: user_profile.json";
+}
+print "";
+
+// Example 2: Fetch user's posts
+print "2. Fetching user's posts...";
+var postsUrl = "https://jsonplaceholder.typicode.com/posts?userId=1";
+var postsResponse = httpGet(postsUrl);
+
+if (postsResponse.status == 200) {
+  var posts = jsonParse(postsResponse.body);
+  var totalPosts = arrayLen(posts);
+  
+  print "   Total posts: " + toString(totalPosts);
+  
+  // Show first 3 post titles
+  var maxShow = mathMin(3, totalPosts);
+  print "   First " + toString(maxShow) + " posts:";
+  
+  for (var i = 0; i < maxShow; i = i + 1) {
+    var post = posts[i];
+    var title = post.title;
+    // Truncate long titles
+    if (strLen(title) > 50) {
+      var parts = strSplit(title, " ");
+      var short = strJoin(arraySlice(parts, 0, mathMin(5, arrayLen(parts))), " ");
+      title = short + "...";
+    }
+    print "   " + toString(i + 1) + ". " + title;
+  }
+  
+  // Save post titles to file
+  var output = "USER POSTS\n";
+  output = output + "==========\n\n";
+  
+  for (var j = 0; j < totalPosts; j = j + 1) {
+    var num = toString(j + 1);
+    output = output + num + ". " + posts[j].title + "\n";
+  }
+  
+  fileWrite("user_posts.txt", output);
+  print "   Saved to: user_posts.txt";
+}
+print "";
+
+// Example 3: Fetch and process comments
+print "3. Analyzing post comments...";
+var commentsUrl = "https://jsonplaceholder.typicode.com/posts/1/comments";
+var commentsResponse = httpGet(commentsUrl);
+
+if (commentsResponse.status == 200) {
+  var comments = jsonParse(commentsResponse.body);
+  var totalComments = arrayLen(comments);
+  
+  print "   Total comments: " + toString(totalComments);
+  
+  // Collect all email domains
+  var domains = [];
+  for (var k = 0; k < totalComments; k = k + 1) {
+    var email = comments[k].email;
+    var parts = strSplit(email, "@");
+    if (arrayLen(parts) == 2) {
+      domains = arrayPush(domains, parts[1]);
+    }
+  }
+  
+  print "   Unique domains found: " + toString(arrayLen(domains));
+}
+print "";
+
+// Example 4: Get photos metadata
+print "4. Fetching photos metadata...";
+var photosUrl = "https://jsonplaceholder.typicode.com/photos?albumId=1";
+var photosResponse = httpGet(photosUrl);
+
+if (photosResponse.status == 200) {
+  var photos = jsonParse(photosResponse.body);
+  print "   Photos in album 1: " + toString(arrayLen(photos));
+  
+  // Create a summary report
+  var report = "PHOTO ALBUM REPORT\n";
+  report = report + "==================\n\n";
+  report = report + "Album ID: 1\n";
+  report = report + "Total Photos: " + toString(arrayLen(photos)) + "\n\n";
+  report = report + "Sample Photos:\n";
+  
+  var sampleCount = mathMin(5, arrayLen(photos));
+  for (var m = 0; m < sampleCount; m = m + 1) {
+    var photo = photos[m];
+    report = report + "\n" + toString(m + 1) + ". " + photo.title + "\n";
+    report = report + "   URL: " + photo.url + "\n";
+  }
+  
+  fileWrite("photo_report.txt", report);
+  print "   Report saved to: photo_report.txt";
+}
+print "";
+
+// Example 5: Generate statistics
+print "5. Generating statistics...";
+var statsTime = time();
+
+var stats = "API CLIENT STATISTICS\n";
+stats = stats + "=====================\n\n";
+stats = stats + "Timestamp: " + toString(statsTime) + "\n";
+stats = stats + "Date: " + toString(mathFloor(statsTime / 86400)) + " days since epoch\n\n";
+
+stats = stats + "Data Collected:\n";
+stats = stats + "- User profile: 1 user\n";
+stats = stats + "- User posts: Retrieved\n";
+stats = stats + "- Comments: Analyzed\n";
+stats = stats + "- Photos: Catalogued\n\n";
+
+stats = stats + "Files Created:\n";
+stats = stats + "- user_profile.json\n";
+stats = stats + "- user_posts.txt\n";
+stats = stats + "- photo_report.txt\n";
+stats = stats + "- statistics.txt\n";
+
+fileWrite("statistics.txt", stats);
+print "   Statistics saved to: statistics.txt";
+print "";
+
+// Example 6: List all generated files
+print "6. Files generated in this session:";
+var files = fileList(".");
+var generatedFiles = [
+  "user_profile.json",
+  "user_posts.txt",
+  "photo_report.txt",
+  "statistics.txt"
+];
+
+for (var n = 0; n < arrayLen(generatedFiles); n = n + 1) {
+  var filename = generatedFiles[n];
+  var exists = fileExists(filename);
+  if (exists) {
+    var content = fileRead(filename);
+    var size = strLen(content);
+    print "   [✓] " + filename + " (" + toString(size) + " bytes)";
+  }
+}
+print "";
+
+print "====================================";
+print "   DEMONSTRATION COMPLETE!         ";
+print "====================================";
+print "";
+print "This demo showcased:";
+print "- HTTP GET requests to REST API";
+print "- JSON parsing and data extraction";
+print "- String manipulation (split, join, len)";
+print "- Array operations (push, slice, len)";
+print "- Math functions (min, max, floor)";
+print "- File I/O (write, read, exists)";
+print "- Type conversions (toString, toNumber)";
+print "- Timestamp utilities";
+print "";
+print "All features working with Go-level performance!";

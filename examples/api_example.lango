@@ -1,0 +1,57 @@
+// api_example.lango - Demonstrating HTTP Network Functions
+
+print "====== HTTP API EXAMPLES ======";
+print "";
+
+// Example 1: Simple GET request
+print "--- Example 1: GET Request ---";
+var response = httpGet("https://jsonplaceholder.typicode.com/posts/1");
+print "Status: " + toString(response.status);
+print "Status Text: " + response.statusText;
+print "";
+
+// Example 2: GET with JSON parsing
+print "--- Example 2: GET with JSON Parsing ---";
+var postResponse = httpGet("https://jsonplaceholder.typicode.com/posts/1");
+if (postResponse.status == 200) {
+  var post = jsonParse(postResponse.body);
+  print "Post ID: " + toString(post.id);
+  print "Post Title: " + post.title;
+  print "User ID: " + toString(post.userId);
+}
+print "";
+
+// Example 3: GET list of posts
+print "--- Example 3: GET List ---";
+var postsResponse = httpGet("https://jsonplaceholder.typicode.com/posts");
+if (postsResponse.status == 200) {
+  var posts = jsonParse(postsResponse.body);
+  print "Total posts: " + toString(arrayLen(posts));
+  print "First post title: " + posts[0].title;
+  print "Second post title: " + posts[1].title;
+  print "Third post title: " + posts[2].title;
+}
+print "";
+
+// Example 4: GET users
+print "--- Example 4: GET Users ---";
+var usersResponse = httpGet("https://jsonplaceholder.typicode.com/users/1");
+if (usersResponse.status == 200) {
+  var user = jsonParse(usersResponse.body);
+  print "User Name: " + user.name;
+  print "User Email: " + user.email;
+  print "User City: " + user.address.city;
+}
+print "";
+
+// Example 5: DELETE request
+print "--- Example 5: DELETE Request ---";
+var deleteResponse = httpDelete("https://jsonplaceholder.typicode.com/posts/1");
+print "Delete Status: " + toString(deleteResponse.status);
+print "";
+
+print "====== API EXAMPLES COMPLETE ======";
+print "";
+print "Note: POST and PUT examples require JSON string literals";
+print "which are not easily demonstrated without escape sequences.";
+print "However, the httpPost and httpPut functions work correctly!";

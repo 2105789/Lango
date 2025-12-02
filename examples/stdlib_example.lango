@@ -1,0 +1,108 @@
+// stdlib_example.lango - Demonstrating Standard Library Functions
+
+print "====== STANDARD LIBRARY EXAMPLES ======";
+print "";
+
+// String Functions
+print "--- String Functions ---";
+var text = "  Hello, Lango World!  ";
+print "Original: '" + text + "'";
+print "Length: " + toString(strLen(text));
+print "Trimmed: '" + strTrim(text) + "'";
+print "Upper: " + strUpper(text);
+print "Lower: " + strLower(text);
+print "Contains 'Lango': " + toString(strContains(text, "Lango"));
+print "Replace 'Lango' with 'Go': " + strReplace(text, "Lango", "Go");
+print "";
+
+var csv = "apple,banana,cherry,date";
+print "CSV string: " + csv;
+var fruits = strSplit(csv, ",");
+print "Split result: " + toString(arrayLen(fruits)) + " items";
+print "Joined back: " + strJoin(fruits, " | ");
+print "";
+
+// Array Functions
+print "--- Array Functions ---";
+var numbers = [10, 20, 30, 40, 50];
+print "Array: " + toString(numbers);
+print "Length: " + toString(arrayLen(numbers));
+
+var extended = arrayPush(numbers, 60);
+print "After push: " + toString(extended);
+
+var lastItem = arrayPop(extended);
+print "Popped item: " + toString(lastItem);
+
+var sliced = arraySlice(numbers, 1, 4);
+print "Slice [1:4]: " + toString(sliced);
+
+var arr1 = [1, 2, 3];
+var arr2 = [4, 5, 6];
+var combined = arrayConcat(arr1, arr2);
+print "Concatenated: " + toString(combined);
+print "";
+
+// Math Functions
+print "--- Math Functions ---";
+var num = 4.7;
+print "Number: " + toString(num);
+print "Floor: " + toString(mathFloor(num));
+print "Ceil: " + toString(mathCeil(num));
+print "Round: " + toString(mathRound(num));
+print "Abs of -5.5: " + toString(mathAbs(-5.5));
+print "Max(10, 20): " + toString(mathMax(10, 20));
+print "Min(10, 20): " + toString(mathMin(10, 20));
+print "Square root of 16: " + toString(mathSqrt(16));
+print "2 to the power of 8: " + toString(mathPow(2, 8));
+print "Random number: " + toString(mathRandom());
+print "";
+
+// Type Conversion Functions
+print "--- Type Conversion ---";
+var strNum = "42.5";
+var converted = toNumber(strNum);
+print "String '42.5' to number: " + toString(converted);
+print "Type check (should work as number): " + toString(converted + 7.5);
+
+var bool1 = toBoolean(1);
+var bool2 = toBoolean(0);
+var bool3 = toBoolean(nil);
+print "toBoolean(1): " + toString(bool1);
+print "toBoolean(0): " + toString(bool2);
+print "toBoolean(nil): " + toString(bool3);
+
+var numToStr = toString(123.456);
+print "Number to string: '" + numToStr + "'";
+print "";
+
+// Advanced Example: Processing Data
+print "--- Advanced Example: Data Processing ---";
+var data = ["John:25", "Jane:30", "Bob:35", "Alice:28"];
+
+print "Processing user data...";
+for (var i = 0; i < arrayLen(data); i = i + 1) {
+  var record = data[i];
+  var parts = strSplit(record, ":");
+  var name = parts[0];
+  var age = toNumber(parts[1]);
+  
+  var isAdult = age >= 18;
+  print "  " + name + " is " + toString(age) + " years old" + " (Adult: " + toString(isAdult) + ")";
+}
+print "";
+
+// Utility Functions
+print "--- Utility Functions ---";
+var startTime = time();
+print "Current timestamp: " + toString(startTime);
+
+print "Sleeping for 500ms...";
+sleep(500);
+
+var endTime = time();
+var elapsed = endTime - startTime;
+print "Elapsed time: ~" + toString(mathRound(elapsed)) + " seconds";
+print "";
+
+print "====== STANDARD LIBRARY EXAMPLES COMPLETE ======";

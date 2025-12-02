@@ -1,0 +1,63 @@
+// file_example.lango - Demonstrating File I/O Functions
+
+print "====== FILE I/O EXAMPLES ======";
+print "";
+
+// Example 1: Write to file
+print "--- Example 1: Writing to File ---";
+var testData = "Hello from Lango! This is a test file.";
+fileWrite("test_output.txt", testData);
+print "File created: test_output.txt";
+print "";
+
+// Example 2: Read from file
+print "--- Example 2: Reading from File ---";
+var content = fileRead("test_output.txt");
+print "File content:";
+print content;
+print "";
+
+// Example 3: Append to file
+print "--- Example 3: Appending to File ---";
+fileAppend("test_output.txt", " Appended text.");
+var updatedContent = fileRead("test_output.txt");
+print "Updated file content:";
+print updatedContent;
+print "";
+
+// Example 4: Check if file exists
+print "--- Example 4: File Exists Check ---";
+var exists = fileExists("test_output.txt");
+print "test_output.txt exists: " + toString(exists);
+var notExists = fileExists("nonexistent.txt");
+print "nonexistent.txt exists: " + toString(notExists);
+print "";
+
+// Example 5: Copy file
+print "--- Example 5: Copy File ---";
+fileCopy("test_output.txt", "test_copy.txt");
+print "Copied test_output.txt to test_copy.txt";
+var copiedContent = fileRead("test_copy.txt");
+print "Copied file content length: " + toString(strLen(copiedContent));
+print "";
+
+// Example 6: List files in directory
+print "--- Example 6: List Files ---";
+var files = fileList(".");
+print "Files in current directory: " + toString(arrayLen(files));
+print "Showing first few files:";
+var maxToShow = mathMin(3, arrayLen(files));
+for (var i = 0; i < maxToShow; i = i + 1) {
+  print "  - " + files[i];
+}
+print "";
+
+// Example 7: Delete files
+print "--- Example 7: Delete Files ---";
+fileDelete("test_output.txt");
+print "Deleted test_output.txt";
+fileDelete("test_copy.txt");
+print "Deleted test_copy.txt";
+print "";
+
+print "====== FILE I/O EXAMPLES COMPLETE ======";

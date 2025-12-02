@@ -155,10 +155,70 @@ type Interpreter struct {
 }
 
 func NewInterpreter() *Interpreter {
+	env := NewEnvironment(nil)
+	
+	// Register HTTP functions
+	env.Define("httpGet", &NativeHttpGet{})
+	env.Define("httpPost", &NativeHttpPost{})
+	env.Define("httpPut", &NativeHttpPut{})
+	env.Define("httpDelete", &NativeHttpDelete{})
+	
+	// Register JSON functions
+	env.Define("jsonParse", &NativeJsonParse{})
+	env.Define("jsonStringify", &NativeJsonStringify{})
+	env.Define("jsonStringifyPretty", &NativeJsonStringifyPretty{})
+	
+	// Register file I/O functions
+	env.Define("fileRead", &NativeFileRead{})
+	env.Define("fileWrite", &NativeFileWrite{})
+	env.Define("fileAppend", &NativeFileAppend{})
+	env.Define("fileExists", &NativeFileExists{})
+	env.Define("fileDelete", &NativeFileDelete{})
+	env.Define("fileList", &NativeFileList{})
+	env.Define("fileCopy", &NativeFileCopy{})
+	
+	// Register string functions
+	env.Define("strLen", &NativeStrLen{})
+	env.Define("strUpper", &NativeStrUpper{})
+	env.Define("strLower", &NativeStrLower{})
+	env.Define("strSplit", &NativeStrSplit{})
+	env.Define("strJoin", &NativeStrJoin{})
+	env.Define("strContains", &NativeStrContains{})
+	env.Define("strReplace", &NativeStrReplace{})
+	env.Define("strTrim", &NativeStrTrim{})
+	
+	// Register array functions
+	env.Define("arrayLen", &NativeArrayLen{})
+	env.Define("arrayPush", &NativeArrayPush{})
+	env.Define("arrayPop", &NativeArrayPop{})
+	env.Define("arraySlice", &NativeArraySlice{})
+	env.Define("arrayConcat", &NativeArrayConcat{})
+	
+	// Register math functions
+	env.Define("mathFloor", &NativeMathFloor{})
+	env.Define("mathCeil", &NativeMathCeil{})
+	env.Define("mathRound", &NativeMathRound{})
+	env.Define("mathAbs", &NativeMathAbs{})
+	env.Define("mathMax", &NativeMathMax{})
+	env.Define("mathMin", &NativeMathMin{})
+	env.Define("mathRandom", &NativeMathRandom{})
+	env.Define("mathPow", &NativeMathPow{})
+	env.Define("mathSqrt", &NativeMathSqrt{})
+	
+	// Register type conversion functions
+	env.Define("toNumber", &NativeToNumber{})
+	env.Define("toString", &NativeToString{})
+	env.Define("toBoolean", &NativeToBoolean{})
+	
+	// Register utility functions
+	env.Define("time", &NativeTime{})
+	env.Define("sleep", &NativeSleep{})
+	
 	return &Interpreter{
-		environment: NewEnvironment(nil),
+		environment: env,
 	}
 }
+
 
 func (i *Interpreter) Interpret(statements []Stmt) {
 	for _, statement := range statements {
@@ -603,10 +663,19 @@ func (i *Interpreter) VisitGetExpr(expr *Get) (interface{}, error) {
 		// Call the instance's Get method
 		// Need to pass the Token for error reporting inside Get
 		return instance.Get(expr.Name)
-	} 
+	}
 	
-	// If not an instance, it's an error
-	return nil, i.error(expr.Name, "Only instances have properties.")
+	// Check if the object is a map (from JSON parsing)
+	if mapObj, ok := object.(map[string]interface{}); ok {
+		value, exists := mapObj[expr.Name.Lexeme]
+		if !exists {
+			return nil, i.error(expr.Name, fmt.Sprintf("Undefined property '%s'.", expr.Name.Lexeme))
+		}
+		return value, nil
+	}
+	
+	// If not an instance or map, it's an error
+	return nil, i.error(expr.Name, "Only instances and objects have properties.")
 }
 
 // Add implementation for Set expression
